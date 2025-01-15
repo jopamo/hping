@@ -906,15 +906,17 @@ int ars_build_packet(struct ars_packet *pkt, unsigned char **packet, size_t *siz
  * system isn't FreeBSD or NetBSD. */
 int ars_bsd_fix(struct ars_packet *pkt, unsigned char *packet, size_t size)
 {
+#if defined OSTYPE_DARWIN || defined OSTYPE_FREEBSD || defined OSTYPE_NETBSD || defined OSTYPE_BSDI
 	struct ars_iphdr *ip;
+#endif
 
 	if (pkt->p_layer[0].l_type != ARS_TYPE_IP ||
 	    size < sizeof(struct ars_iphdr)) {
 		ars_set_error(pkt, "BSD fix requested, but layer 0 not IP");
 		return -ARS_INVALID;
 	}
-	ip = (struct ars_iphdr*) packet;
 #if defined OSTYPE_DARWIN || defined OSTYPE_FREEBSD || defined OSTYPE_NETBSD || defined OSTYPE_BSDI
+	ip = (struct ars_iphdr*) packet;
 	ip->tot_len = ntohs(ip->tot_len);
 	ip->frag_off = ntohs(ip->frag_off);
 #endif

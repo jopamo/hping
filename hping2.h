@@ -357,8 +357,6 @@ struct delaytable_element {
 	int status;
 };
 
-volatile struct delaytable_element delaytable[TABLESIZE];
-
 /* protos */
 void	nop(void);				/* nop */
 int	parse_options(int, char**);		/* option parser */

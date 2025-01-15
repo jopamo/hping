@@ -23,8 +23,8 @@
 #include <sched.h>
 
 #include <sys/ioctl.h>
-#include <net/bpf.h>
 #include <pcap.h>
+#include <pcap-bpf.h>
 
 #include "release.h"
 #include "hping2.h"

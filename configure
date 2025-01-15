@@ -63,12 +63,12 @@ esac
 #
 for TCLPATH_TRY in "/usr/bin/" "/usr/local/bin/" "/bin/"
 do
-	for TCLVER_TRY in "8.4" "8.3" "8.2" "8.1" "8.0"
+	for TCLVER_TRY in "8.6" "8.5" "8.4" "8.3" "8.2" "8.1" "8.0"
 	do
-		if [ -z $TCLSH ]
+		if [ -z "$TCLSH" ]
 		then
 			TCLSH_TRY=${TCLPATH_TRY}tclsh${TCLVER_TRY}
-			if [ -f $TCLSH_TRY ]
+			if [ -f "$TCLSH_TRY" ]
 			then
 				TCLSH=$TCLSH_TRY
 				echo "===> Found Tclsh in: $TCLSH"
@@ -76,7 +76,7 @@ do
 		fi
 	done
 done
-if [ -f $TCLSH ]
+if [ -f "$TCLSH" ]
 then
 	TCL_VER=`echo puts \\$tcl_version | $TCLSH -`
 	USE_TCL='-DUSE_TCL'
@@ -98,8 +98,7 @@ then
 fi
 if [ -n $USE_TCL ]
 then
-	LIBPOSTFIX=`ls -1 /usr/local/lib/ /usr/lib | grep 'libtcl[0-9]' | grep so | sed -e 's/\.so.*//g' -e 's/libtcl//g' | sort -r | head -1`
-	TCL_LIB="-ltcl${LIBPOSTFIX} -lm -lpthread"
+	TCL_LIB="-ltcl${TCL_VER} -lm -lpthread"
 fi
 
 #

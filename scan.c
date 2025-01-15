@@ -456,7 +456,7 @@ static void receiver(struct portinfo *pi, int childpid)
 				continue;
 			/* time to copy headers in a safe place */
 			p = (unsigned char*) packet+linkhdr_size+iphdrlen;
-			memcpy(&icmp, p, sizeof(subtcp));
+			memcpy(&icmp, p, sizeof(icmp));
 			p += sizeof(icmp);
 			memcpy(&subip, p, sizeof(ip));
 			p += sizeof(ip);

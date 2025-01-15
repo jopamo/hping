@@ -16,16 +16,18 @@
 #include <string.h>
 #include <stdlib.h>
 #include <sys/ioctl.h>
-#include <net/bpf.h>
 #include <pcap.h>
+#include <pcap-bpf.h>
 
 #include "globals.h"
 
 int open_pcap()
 {
+#if (!defined OSTYPE_LINUX) && (!defined __sun__)
 	int on;
 
 	on = 1; /* no warning if BIOCIMMEDIATE will not be compiled */
+#endif
 	if (opt_debug)
 		printf("DEBUG: pcap_open_live(%s, 99999, 0, 1, %p)\n",
 			ifname, errbuf);

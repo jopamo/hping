@@ -20,66 +20,54 @@
 #include "hping2.h"
 #include "globals.h"
 
-unsigned char ip_opt_build(char* ip_opt)
-{
+unsigned char ip_opt_build(char* ip_opt) {
     unsigned char optlen = 0;
     unsigned long ip;
 
     memset(ip_opt, 1, 40);
 
-    if (opt_lsrr)
-    {
-        if (lsr_length<=39)
-        {
+    if (opt_lsrr) {
+        if (lsr_length <= 39) {
             memcpy(ip_opt, &lsr, lsr_length);
             optlen += lsr_length;
         }
-        else
-        {
+        else {
             printf("Warning: loose source route is too long, discarding it");
-            opt_lsrr=0;
+            opt_lsrr = 0;
         }
     }
 
-    if (opt_ssrr)
-    {
-        if (ssr_length+optlen<=39)
-        {
+    if (opt_ssrr) {
+        if (ssr_length + optlen <= 39) {
             memcpy(ip_opt + optlen, &ssr, ssr_length);
             optlen += ssr_length;
         }
-        else
-        {
+        else {
             printf("Warning: strict source route is too long, discarding it");
-            opt_ssrr=0;
+            opt_ssrr = 0;
         }
     }
 
-	if (opt_rroute)
-	{
-        if (optlen<=33)
-        {
-            ip_opt[optlen]=IPOPT_RR;
-            ip_opt[optlen+1]=39-optlen;
-            ip_opt[optlen+2]=8;
-            ip=inet_addr("1.2.3.4");
-            memcpy(ip_opt+optlen+3,&ip,4);
-            optlen=39;
+    if (opt_rroute) {
+        if (optlen <= 33) {
+            ip_opt[optlen] = IPOPT_RR;
+            ip_opt[optlen + 1] = 39 - optlen;
+            ip_opt[optlen + 2] = 8;
+            ip = inet_addr("1.2.3.4");
+            memcpy(ip_opt + optlen + 3, &ip, 4);
+            optlen = 39;
         }
-        else
-        {
+        else {
             printf("Warning: no room for record route, discarding option\n");
-            opt_rroute=0;
+            opt_rroute = 0;
         }
-	}
+    }
 
-    if (optlen)
-    {
+    if (optlen) {
         optlen = (optlen + 3) & ~3;
-        ip_opt[optlen-1] = 0;
+        ip_opt[optlen - 1] = 0;
         return optlen;
     }
     else
         return 0;
 }
-

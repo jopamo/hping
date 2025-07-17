@@ -13,18 +13,17 @@
 #include <unistd.h>
 #include <sys/mman.h>
 
-int memunlock(char *addr, size_t size)
-{
+int memunlock(char* addr, size_t size) {
 #ifdef _POSIX_MEMLOCK_RANGE
-	unsigned long    page_offset, page_size;
+    unsigned long page_offset, page_size;
 
-	page_size = sysconf(_SC_PAGESIZE);
-	page_offset = (unsigned long) addr % page_size;
+    page_size = sysconf(_SC_PAGESIZE);
+    page_offset = (unsigned long)addr % page_size;
 
-	addr -= page_offset; 
-	size += page_offset;
+    addr -= page_offset;
+    size += page_offset;
 
-	return ( munlock(addr, size) ); 
+    return (munlock(addr, size));
 #endif
-	return (-1);
+    return (-1);
 }

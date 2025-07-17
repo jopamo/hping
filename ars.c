@@ -432,22 +432,24 @@ u_int16_t ars_multi_cksum(struct mc_context* c, int op, void* vbuf, size_t nbyte
             *((u_int16_t*)&oddbyte) |= *(u_int16_t*)buf;
             oddbyte = (x[0] << 8) | x[1]; /* fix endianess */
             c->old += oddbyte;
-            nbytes--;
+            nbytes--; /* stay aligned */
             c->oddbyte_flag = 0;
-            /* We need to stay aligned -- bad slowdown, fix? */
-            tmp = alloca(nbytes);
-            memcpy(tmp, vbuf + 1, nbytes);
+
+            tmp = alloca(nbytes); /* slow, but keeps ABI */
+            memcpy(tmp, (u_int8_t*)vbuf + 1, nbytes);
             buf = tmp;
         }
+
         sum = c->old;
         while (nbytes > 1) {
             sum += *buf++;
             nbytes -= 2;
         }
         c->old = sum;
-        if (nbytes == 1) {
+
+        if (nbytes == 1) { /* save trailing byte */
             c->oddbyte = *(u_int16_t*)buf;
-            c->oddbyte_flag++;
+            c->oddbyte_flag = 1;
         }
         return -ARS_OK;
     }
@@ -463,9 +465,12 @@ u_int16_t ars_multi_cksum(struct mc_context* c, int op, void* vbuf, size_t nbyte
         return (u_int16_t)~sum;
     }
     else {
-        assert("else reached in ars_multi_cksum()" == "");
+        /* unreachable: invalid op code passed */
+        assert(0 && "else reached in ars_multi_cksum()");
+        __builtin_unreachable(); /* helps optimisation */
     }
-    return 0; /* unreached, here to prevent warnings */
+
+    return 0; /* never reached, keeps compilers quiet */
 }
 
 /* The ARS compiler table is just a function pointers array:

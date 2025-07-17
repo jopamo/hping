@@ -1,31 +1,50 @@
-/* 
- * $smu-mark$ 
- * $name: listen.c$ 
- * $author: Salvatore Sanfilippo <antirez@invece.org>$ 
- * $copyright: Copyright (C) 1999 by Salvatore Sanfilippo$ 
- * $license: This software is under GPL version 2 of license$ 
- * $date: Fri Nov  5 11:55:48 MET 1999$ 
- * $rev: 8$ 
- */ 
+/*
+ * $smu-mark$
+ * $name: listen.c$
+ * $author: Salvatore Sanfilippo <antirez@invece.org>$
+ * $copyright: Copyright (C) 1999 by Salvatore Sanfilippo$
+ * $license: This software is under GPL version 2 of license$
+ * $date: Fri Nov  5 11:55:48 MET 1999$
+ * $rev: 9$   // incremented
+ */
 
-/* $Id: listen.c,v 1.2 2003/09/01 00:22:06 antirez Exp $ */
+/* $Id: listen.c,v 1.3 2025/07/17 10:55:00 user Exp $ */
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <errno.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 
-#include "hping2.h" /* hping2.h includes hcmp.h */
+#include "hping2.h"   /* hping2.h includes hcmp.h */
 #include "globals.h"
+
+/* write exactly count bytes or return -1 on failure */
+static int safe_write(int fd, const void *buf, size_t count)
+{
+	const unsigned char *p = buf;
+
+	while (count) {
+		ssize_t n = write(fd, p, count);
+		if (n < 0) {
+			if (errno == EINTR)
+				continue; /* interrupted by signal, retry */
+			return -1;     /* real error */
+		}
+		p     += n;
+		count -= n;
+	}
+	return 0;
+}
 
 void listenmain(void)
 {
 	int size, ip_size;
 	int stdoutFD = fileno(stdout);
-	char packet[IP_MAX_SIZE+linkhdr_size];
+	char packet[IP_MAX_SIZE + linkhdr_size];
 	char *p, *ip_packet;
 	struct myiphdr ip;
 	__u16 id;
@@ -33,25 +52,23 @@ void listenmain(void)
 
 	exp_id = 1;
 
-	while(1) {
-		size = read_packet(packet, IP_MAX_SIZE+linkhdr_size);
-		switch(size) {
-		case 0:
+	for (;;) {
+		size = read_packet(packet, IP_MAX_SIZE + linkhdr_size);
+		if (size == 0)
 			continue;
-		case -1:
+		if (size == -1)
 			exit(1);
-		}
-	
+
 		/* Skip truncated packets */
-		if (size < linkhdr_size+IPHDR_SIZE)
+		if (size < linkhdr_size + IPHDR_SIZE)
 			continue;
 		ip_packet = packet + linkhdr_size;
 
-		/* copy the ip header so it will be aligned */
+		/* copy the ip header so it is aligned */
 		memcpy(&ip, ip_packet, sizeof(ip));
-		id = ntohs(ip.id);
+		id      = ntohs(ip.id);
 		ip_size = ntohs(ip.tot_len);
-		if (size-linkhdr_size > ip_size)
+		if (size - linkhdr_size > ip_size)
 			size = ip_size;
 		else
 			size -= linkhdr_size;
@@ -73,8 +90,11 @@ void listenmain(void)
 				}
 			}
 
-			p+=strlen(sign);
-			write(stdoutFD, p, size-(p-ip_packet));
+			p += strlen(sign);
+			if (safe_write(stdoutFD, p, size - (p - ip_packet)) == -1) {
+				perror("hping2: write failed");
+				exit(1);
+			}
 		}
 	}
 }
